@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Participación en Seminario UCI</title>
+    <style>
+        /* Estilos Generales y Móviles (Mobile First) */
+        body {
+            font-family: sans-serif; line-height: 1.6; margin: 0; padding: 15px; background-color: #f4f4f4; color: #333;
+        }
+        .container {
+            max-width: 1200px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #10628e; text-align: center; font-size: 1.8em; margin-bottom: 20px;
+        }
+        .form-section, .button-section, #scoreSummary {
+            margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee;
+        }
+        .button-section, #scoreSummary { border-bottom: none; padding-top: 15px; }
+        #scoreSummary { display: none; margin-top: 30px; padding-top: 20px; border-top: 2px solid #10628e; }
+        #scoreSummary h2 { text-align: center; color: #10628e; margin-bottom: 15px; }
+        .form-section label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-section input[type="date"], .form-section input[type="text"], .form-section select {
+            width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+        }
+
+        /* Estilos Tabla Rúbrica */
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        #rubricaTable { width: 100%; border-collapse: collapse; min-width: 800px; }
+        #rubricaTable th, #rubricaTable td { border: 1px solid #ddd; padding: 8px; text-align: center; vertical-align: middle; }
+        #rubricaTable thead th { background-color: #e9f5fc; font-weight: bold; color: #10628e; font-size: 0.9em; }
+        #rubricaTable th:first-child, #rubricaTable td:first-child { text-align: left; min-width: 180px; background-color: #f8f8f8; }
+        #rubricaTable td:nth-child(2), #rubricaTable tfoot td:nth-child(2) { min-width: 60px; font-weight: bold; background-color: #f8f8f8; }
+        #rubricaTable tbody td { min-height: 45px; padding: 5px; }
+        #rubricaTable tfoot td { font-weight: bold; font-size: 1.1em; background-color: #e9f5fc; }
+        #rubricaTable tfoot td:first-child { text-align: right; }
+
+        /* Estilos para Input Numérico */
+        .score-input {
+             width: 65px; padding: 8px 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 1em; -moz-appearance: textfield;
+        }
+        .score-input::-webkit-outer-spin-button, .score-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .score-input:disabled { background-color: #e9ecef; cursor: not-allowed; opacity: 0.8; }
+
+        /* Estilos para N/A y Deshabilitado */
+        .na-text { display: none; color: #d9534f; font-weight: bold; font-size: 0.9em; margin-top: 5px; display: block; text-align: center; }
+        #rubricaTable td[data-disabled="true"] { background-color: #f0f0f0; opacity: 0.7; }
+        .print-na { display: none; }
+
+        /* Estilos Totales */
+         .total-score { color: #10628e; display: inline-block; }
+         .total-score.na { color: #d9534f; font-style: italic; font-size: 0.9em; }
+
+        /* Estilos Tabla Resumen */
+         #summaryTable { width: 80%; margin: 20px auto; border-collapse: collapse; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+         #summaryTable th, #summaryTable td { border: 1px solid #ccc; padding: 12px; text-align: left; }
+         #summaryTable th { background-color: #6c757d; color: white; font-weight: bold; }
+         #summaryTable td:last-child { text-align: center; font-weight: bold; font-size: 1.1em; }
+         #summaryTable .score-na { color: #6c757d; font-style: italic; font-weight: normal; }
+         #summaryTable .score-incomplete { color: #e07a5f; font-style: italic; font-weight: normal; }
+         #summaryInfo p { text-align: center; font-size: 1.1em; margin: 5px 0; color: #333; }
+         #summaryInfo p strong { color: #10628e; }
+
+         /* Estilos Botones */
+         .button-section { text-align: center; }
+         .action-button { padding: 10px 15px; /* Un poco menos padding horizontal */ font-size: 0.95em; /* Ligeramente más pequeño */ border: none; border-radius: 5px; cursor: pointer; color: white; margin: 5px; /* Espacio uniforme */ transition: background-color 0.3s ease; vertical-align: middle; }
+         #saveButton { background-color: #5cb85c; } #saveButton:hover { background-color: #4cae4c; }
+         #generateSummaryButton { background-color: #0275d8; } #generateSummaryButton:hover { background-color: #025aa5; }
+         #printSummaryButton { background-color: #f0ad4e; display: none; } #printSummaryButton:hover { background-color: #ec971f; }
+         #clearButton { background-color: #d9534f; } #clearButton:hover { background-color: #c9302c; }
+         #saveToSheetButton { background-color: #5bc0de; } /* Azul claro/turquesa */ #saveToSheetButton:hover { background-color: #31b0d5; }
+         #saveToSheetButton:disabled { background-color: #ccc; cursor: not-allowed; }
+         .feedback-message { display: block; margin-top: 10px; font-size: 0.9em; color: green; text-align: center; height: 1em; /* Altura fija para evitar saltos */}
+
+        /* Media Query para pantallas más grandes */
+        @media (min-width: 768px) {
+            h1 { font-size: 2.2em; }
+            .form-section { display: flex; gap: 20px; align-items: flex-end; border-bottom: none; }
+            .form-section div { flex: 1; }
+            .form-section label { margin-bottom: 8px; }
+            .form-section input, .form-section select { margin-bottom: 0; }
+            #rubricaTable th { font-size: 1em; }
+            .button-section { text-align: right; } /* Alinear botones */
+            .score-input { width: 70px; }
+            .action-button { padding: 10px 20px; font-size: 1em; } /* Restaurar padding en desktop */
+        }
+
+        /* --- ESTILOS DE IMPRESIÓN (SOLO PARA LA TABLA RESUMEN Y LA INFO) --- */
+        @media print {
+            body > *:not(#scoreSummary) { display: none !important; }
+            html, body { margin: 0; padding: 0; background-color: #fff; }
+            #scoreSummary { display: block !important; position: absolute; left: 0; top: 0; width: 100%; border-top: none !important; box-shadow: none !important; margin: 0 !important; padding: 15mm !important; box-sizing: border-box; }
+            #scoreSummary h2 { font-size: 14pt; text-align: center; margin-bottom: 15px; color: #000; }
+            #summaryInfo p { text-align: center; font-size: 11pt; margin: 5px 0 15px 0; color: #000; }
+            #summaryInfo p strong { color: #000; }
+            #summaryTable { width: 100%; margin: 0; border: 1px solid #000 !important; font-size: 11pt; page-break-inside: avoid; }
+            #summaryTable th, #summaryTable td { border: 1px solid #555 !important; padding: 8px; color: #000 !important; }
+            #summaryTable th { background-color: #eee !important; color: #000 !important; font-weight: bold; }
+            #summaryTable .score-na, #summaryTable .score-incomplete { color: #333 !important; font-style: italic; }
+        } /* Fin @media print */
+
+    </style>
+</head>
+<body>
+    <div class="container" id="evaluationFormContainer">
+        <h1>Participación Curso: Reconocimiento del paciente Grave (FCCS)</h1>
+
+        <div class="form-section">
+            <div><label for="fecha">Fecha:</label><input type="date" id="fecha" name="fecha"></div>
+            <div><label for="tema">Tema del Seminario:</label><input type="text" id="tema" name="tema" placeholder="Ingrese tema..."></div>
+            <div><label for="evaluador">Nombre del Evaluador:</label><input type="text" id="evaluador" name="evaluador" placeholder="Ingrese su nombre..."></div>
+        </div>
+
+        <div class="form-section">
+            <label for="presentadorSelect">Seleccione Presentador (no será evaluado):</label>
+            <select id="presentadorSelect" name="presentador">
+                <option value="">-- Seleccione --</option>
+                <option value="ninguno">Ninguno (Evaluación General)</option>
+                <option value="yordan">Yordan Arauz</option>
+                <option value="alfredo">Alfredo Flores</option>
+                <option value="hellen">Hellen Suazo</option>
+                <option value="jorge">Jorge Soza</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table id="rubricaTable">
+                <thead>
+                    <tr>
+                        <th>Criterio</th>
+                        <th>Puntos<br>Máximos</th>
+                        <th data-resident="yordan">Yordan Arauz <span class="na-text" data-resident-na="yordan">N/A Presentador</span></th>
+                        <th data-resident="alfredo">Alfredo Flores <span class="na-text" data-resident-na="alfredo">N/A Presentador</span></th>
+                        <th data-resident="hellen">Hellen Suazo <span class="na-text" data-resident-na="hellen">N/A Presentador</span></th>
+                        <th data-resident="jorge">Jorge Soza <span class="na-text" data-resident-na="jorge">N/A Presentador</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-criterion="prep" data-weight="15">
+                        <td>Preparación y puntualidad</td> <td>15</td>
+                        <td data-resident="yordan"><input type="number" class="score-input" name="prep_yordan" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="alfredo"><input type="number" class="score-input" name="prep_alfredo" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="hellen"><input type="number" class="score-input" name="prep_hellen" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="jorge"><input type="number" class="score-input" name="prep_jorge" min="0" max="15" step="1" inputmode="numeric"></td>
+                    </tr>
+                     <tr data-criterion="freq" data-weight="20">
+                        <td>Frecuencia y calidad de intervenciones</td> <td>20</td>
+                         <td data-resident="yordan"><input type="number" class="score-input" name="freq_yordan" min="0" max="20" step="1" inputmode="numeric"></td>
+                        <td data-resident="alfredo"><input type="number" class="score-input" name="freq_alfredo" min="0" max="20" step="1" inputmode="numeric"></td>
+                        <td data-resident="hellen"><input type="number" class="score-input" name="freq_hellen" min="0" max="20" step="1" inputmode="numeric"></td>
+                        <td data-resident="jorge"><input type="number" class="score-input" name="freq_jorge" min="0" max="20" step="1" inputmode="numeric"></td>
+                    </tr>
+                     <tr data-criterion="integ" data-weight="20">
+                        <td>Integración clínica y seguridad del paciente</td> <td>20</td>
+                         <td data-resident="yordan"><input type="number" class="score-input" name="integ_yordan" min="0" max="20" step="1" inputmode="numeric"></td>
+                        <td data-resident="alfredo"><input type="number" class="score-input" name="integ_alfredo" min="0" max="20" step="1" inputmode="numeric"></td>
+                        <td data-resident="hellen"><input type="number" class="score-input" name="integ_hellen" min="0" max="20" step="1" inputmode="numeric"></td>
+                        <td data-resident="jorge"><input type="number" class="score-input" name="integ_jorge" min="0" max="20" step="1" inputmode="numeric"></td>
+                    </tr>
+                    <tr data-criterion="crit" data-weight="15">
+                        <td>Pensamiento crítico / evidencia</td> <td>15</td>
+                         <td data-resident="yordan"><input type="number" class="score-input" name="crit_yordan" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="alfredo"><input type="number" class="score-input" name="crit_alfredo" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="hellen"><input type="number" class="score-input" name="crit_hellen" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="jorge"><input type="number" class="score-input" name="crit_jorge" min="0" max="15" step="1" inputmode="numeric"></td>
+                    </tr>
+                     <tr data-criterion="esc" data-weight="15">
+                        <td>Escucha activa y construcción colectiva</td> <td>15</td>
+                         <td data-resident="yordan"><input type="number" class="score-input" name="esc_yordan" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="alfredo"><input type="number" class="score-input" name="esc_alfredo" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="hellen"><input type="number" class="score-input" name="esc_hellen" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="jorge"><input type="number" class="score-input" name="esc_jorge" min="0" max="15" step="1" inputmode="numeric"></td>
+                    </tr>
+                    <tr data-criterion="prof" data-weight="15">
+                        <td>Profesionalismo y respeto multidisciplinario</td> <td>15</td>
+                         <td data-resident="yordan"><input type="number" class="score-input" name="prof_yordan" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="alfredo"><input type="number" class="score-input" name="prof_alfredo" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="hellen"><input type="number" class="score-input" name="prof_hellen" min="0" max="15" step="1" inputmode="numeric"></td>
+                        <td data-resident="jorge"><input type="number" class="score-input" name="prof_jorge" min="0" max="15" step="1" inputmode="numeric"></td>
+                    </tr>
+                </tbody>
+                 <tfoot>
+                     <tr>
+                         <td colspan="2">Puntaje Total (Suma directa / 100)</td>
+                         <td data-resident="yordan"><span id="total_yordan" class="total-score">0</span></td>
+                         <td data-resident="alfredo"><span id="total_alfredo" class="total-score">0</span></td>
+                         <td data-resident="hellen"><span id="total_hellen" class="total-score">0</span></td>
+                         <td data-resident="jorge"><span id="total_jorge" class="total-score">0</span></td>
+                     </tr>
+                </tfoot>
+            </table>
+        </div> <div class="button-section">
+             <button id="saveButton" class="action-button">Guardar Progreso</button>
+             <button id="clearButton" class="action-button">Limpiar Formulario</button>
+             <button id="generateSummaryButton" class="action-button">Generar Resumen de Notas</button>
+             <button id="saveToSheetButton" class="action-button" style="background-color: #5bc0de;">Guardar en Google Sheet</button> <button id="printSummaryButton" class="action-button">Imprimir Notas</button>
+             <span id="feedbackMessage" class="feedback-message" style="display: none;"></span>
+        </div>
+
+    </div> <div id="scoreSummary">
+         <h2>Resumen de Notas Finales</h2>
+         <div id="summaryInfo">
+             </div>
+         <table id="summaryTable">
+              <thead>
+                   <tr>
+                       <th>Residente</th>
+                       <th>Puntaje Final (sobre 100)</th>
+                   </tr>
+              </thead>
+              <tbody id="summaryTableBody">
+                   </tbody>
+         </table>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Element References ---
+            const presentadorSelect = document.getElementById('presentadorSelect');
+            const rubricaTable = document.getElementById('rubricaTable');
+            const naTextsHeader = rubricaTable.querySelectorAll('.na-text[data-resident-na]');
+            const allScoreInputs = rubricaTable.querySelectorAll('tbody .score-input');
+            const residentData = { yordan: "Yordan Arauz", alfredo: "Alfredo Flores", hellen: "Hellen Suazo", jorge: "Jorge Soza" };
+            const residentIds = Object.keys(residentData);
+            const criteriaRows = rubricaTable.querySelectorAll('tbody tr[data-criterion]');
+            const totalScoreSpans = {
+                yordan: document.getElementById('total_yordan'), alfredo: document.getElementById('total_alfredo'),
+                hellen: document.getElementById('total_hellen'), jorge: document.getElementById('total_jorge')
+            };
+            const saveButton = document.getElementById('saveButton');
+            const clearButton = document.getElementById('clearButton');
+            const generateSummaryButton = document.getElementById('generateSummaryButton');
+            const printSummaryButton = document.getElementById('printSummaryButton');
+            const saveToSheetButton = document.getElementById('saveToSheetButton'); // Referencia al nuevo botón
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const scoreSummaryDiv = document.getElementById('scoreSummary');
+            const summaryInfoDiv = document.getElementById('summaryInfo');
+            const summaryTableBody = document.getElementById('summaryTableBody');
+            const dateInput = document.getElementById('fecha');
+            const topicInput = document.getElementById('tema');
+            const evaluatorInput = document.getElementById('evaluador');
+
+            // --- Functions ---
+            function calculateResidentScore(residentId) {
+                let totalScore = 0;
+                let allCriteriaAnswered = true;
+                const residentInputs = rubricaTable.querySelectorAll(`tbody .score-input[name$="_${residentId}"]`);
+                residentInputs.forEach(input => {
+                    const value = input.value.trim(); const max = parseInt(input.max, 10) || 0; let points = 0;
+                    if (value === '') { allCriteriaAnswered = false; points = 0; }
+                    else {
+                        points = parseInt(value, 10);
+                        if (isNaN(points) || points < 0) { points = 0; input.value = 0; } else if (points > max) { points = max; input.value = max; }
+                    }
+                    totalScore += points;
+                });
+                const totalSpan = totalScoreSpans[residentId]; let scoreStatus = 'ok';
+                if (totalSpan) {
+                    const isDisabled = rubricaTable.querySelector(`tbody td[data-resident="${residentId}"][data-disabled="true"]`);
+                    if (isDisabled) { totalSpan.textContent = 'N/A'; totalSpan.classList.add('na'); scoreStatus = 'na'; }
+                    else {
+                        totalSpan.textContent = totalScore; totalSpan.classList.remove('na');
+                        if (!allCriteriaAnswered) { scoreStatus = 'incomplete'; }
+                    }
+                } return { score: totalScore, status: scoreStatus, allAnswered: allCriteriaAnswered };
+            }
+
+            function updateRubricState() {
+                const selectedPresenter = presentadorSelect.value;
+                residentIds.forEach(id => {
+                    const inputs = rubricaTable.querySelectorAll(`tbody .score-input[name$="_${id}"]`);
+                    const cells = rubricaTable.querySelectorAll(`tbody td[data-resident="${id}"]`);
+                    const naSpanHeader = rubricaTable.querySelector(`.na-text[data-resident-na="${id}"]`);
+                    cells.forEach(cell => cell.removeAttribute('data-disabled'));
+                    inputs.forEach(input => input.disabled = false ); if(naSpanHeader) naSpanHeader.style.display = 'none';
+                    calculateResidentScore(id);
+                });
+                if (selectedPresenter && selectedPresenter !== 'ninguno') {
+                    const inputsToDisable = rubricaTable.querySelectorAll(`tbody .score-input[name$="_${selectedPresenter}"]`);
+                    const cellsToMark = rubricaTable.querySelectorAll(`tbody td[data-resident="${selectedPresenter}"]`);
+                    const naSpanToShowHeader = rubricaTable.querySelector(`.na-text[data-resident-na="${selectedPresenter}"]`);
+                    inputsToDisable.forEach(input => { input.disabled = true; input.value = ''; });
+                    cellsToMark.forEach(cell => cell.setAttribute('data-disabled', 'true'));
+                    if(naSpanToShowHeader) naSpanToShowHeader.style.display = 'block';
+                    if(totalScoreSpans[selectedPresenter]) { totalScoreSpans[selectedPresenter].textContent = 'N/A'; totalScoreSpans[selectedPresenter].classList.add('na'); }
+                }
+                 scoreSummaryDiv.style.display = 'none'; printSummaryButton.style.display = 'none';
+            }
+
+            function clearForm() {
+                if (!confirm("¿Está seguro de que desea limpiar todo el formulario y los datos guardados?")) { return; }
+                 dateInput.value = ''; topicInput.value = ''; evaluatorInput.value = ''; presentadorSelect.value = '';
+                 allScoreInputs.forEach(input => { input.value = ''; input.disabled = false; });
+                 residentIds.forEach(id => {
+                     const cells = rubricaTable.querySelectorAll(`tbody td[data-resident="${id}"]`); cells.forEach(cell => cell.removeAttribute('data-disabled'));
+                     const naSpanHeader = rubricaTable.querySelector(`.na-text[data-resident-na="${id}"]`); if(naSpanHeader) naSpanHeader.style.display = 'none';
+                     calculateResidentScore(id);
+                 });
+                 scoreSummaryDiv.style.display = 'none'; printSummaryButton.style.display = 'none';
+                 localStorage.removeItem('rubricEvaluationData');
+                 showFeedback('Formulario limpiado.', 'success'); window.scrollTo(0, 0);
+            }
+
+            function generateSummaryTable() {
+                summaryTableBody.innerHTML = ''; summaryInfoDiv.innerHTML = ''; let allScoresComplete = true;
+                const evalName = evaluatorInput.value.trim(); const topicName = topicInput.value.trim(); const dateValue = dateInput.value;
+                if (evalName) { summaryInfoDiv.innerHTML += `<p><strong>Evaluador:</strong> ${evalName}</p>`; }
+                if (topicName) { summaryInfoDiv.innerHTML += `<p><strong>Tema:</strong> ${topicName}</p>`; }
+                if (dateValue) { summaryInfoDiv.innerHTML += `<p><strong>Fecha:</strong> ${dateValue}</p>`; } else { summaryInfoDiv.innerHTML += `<p><strong>Fecha:</strong> No especificada</p>`; }
+                residentIds.forEach(id => {
+                    const residentName = residentData[id] || id; const result = calculateResidentScore(id); const scoreDisplay = totalScoreSpans[id].textContent;
+                    const row = summaryTableBody.insertRow(); const cellName = row.insertCell(); const cellScore = row.insertCell();
+                    cellName.textContent = residentName; cellScore.textContent = scoreDisplay;
+                    if (result.status === 'na') { cellScore.classList.add('score-na'); }
+                    else if (result.status === 'incomplete') { cellScore.classList.add('score-incomplete'); allScoresComplete = false; }
+                    else { cellScore.classList.remove('score-na', 'score-incomplete'); }
+                });
+                scoreSummaryDiv.style.display = 'block';
+                 if(allScoresComplete || confirm("Algunos puntajes están incompletos o vacíos (contarán como 0). ¿Desea generar el resumen de todos modos?")) {
+                    printSummaryButton.style.display = 'inline-block'; showFeedback('Resumen generado.', 'success');
+                 } else { printSummaryButton.style.display = 'none'; showFeedback('Generación de resumen cancelada.', 'info'); scoreSummaryDiv.style.display = 'none'; }
+            }
+
+            function printSummary() { window.print(); }
+
+            function saveData() {
+                const data = { date: dateInput.value, topic: topicInput.value, evaluator: evaluatorInput.value, presenter: presentadorSelect.value, scores: {} };
+                residentIds.forEach(id => {
+                    data.scores[id] = {}; const residentInputs = rubricaTable.querySelectorAll(`tbody .score-input[name$="_${id}"]`);
+                    residentInputs.forEach(input => { const criterion = input.name.split('_')[0]; data.scores[id][criterion] = input.value; });
+                });
+                try { localStorage.setItem('rubricEvaluationData', JSON.stringify(data)); showFeedback('Progreso guardado localmente.', 'success'); }
+                catch (e) { console.error("Error guardando:", e); showFeedback('Error al guardar.', 'error'); }
+            }
+
+            function loadData() {
+                 const savedDataString = localStorage.getItem('rubricEvaluationData'); if (!savedDataString) return;
+                try {
+                    const savedData = JSON.parse(savedDataString);
+                    dateInput.value = savedData.date || ''; topicInput.value = savedData.topic || ''; evaluatorInput.value = savedData.evaluator || ''; presentadorSelect.value = savedData.presenter || '';
+                    if (savedData.scores) {
+                         residentIds.forEach(id => {
+                             if (savedData.scores[id]) {
+                                 const residentInputs = rubricaTable.querySelectorAll(`tbody .score-input[name$="_${id}"]`);
+                                 residentInputs.forEach(input => {
+                                      const criterion = input.name.split('_')[0];
+                                      if (savedData.scores[id][criterion] !== undefined && savedData.scores[id][criterion] !== null) { input.value = savedData.scores[id][criterion]; } else { input.value = ''; }
+                                 }); } }); }
+                } catch (e) { console.error("Error cargando:", e); localStorage.removeItem('rubricEvaluationData'); showFeedback('Error al cargar.', 'error'); }
+                updateRubricState();
+            }
+
+            // --- NUEVA Función para Guardar en Google Sheet ---
+            async function saveToGoogleSheet() {
+                const webAppUrl = "https://script.google.com/macros/s/AKfycby4xS87B3vd4zbEhAmJC9rACTW1n4j_W3s79FO7u5KKZUUvSOTybsVJP9M1sVHAlkmoZQ/exec";
+
+                if (!webAppUrl || !webAppUrl.startsWith("https://script.google.com/")) {
+                    showFeedback("Error: URL de la Web App no configurada en el script.", "error");
+                    return;
+                }
+
+                const fecha = dateInput.value;
+                const tema = topicInput.value;
+                const evaluador = evaluatorInput.value;
+                const presentadorElement = presentadorSelect.options[presentadorSelect.selectedIndex];
+                const presentador = presentadorSelect.value && presentadorSelect.value !== 'ninguno' ? presentadorElement.text : 'Ninguno';
+                
+                let puntajes = {};
+                let residentes = {}; // Objeto para mapear id con nombre completo
+                let scoresAreFinal = true;
+
+                residentIds.forEach(id => {
+                    calculateResidentScore(id);
+                    const scoreText = totalScoreSpans[id].textContent;
+                    puntajes[id] = scoreText;
+                    residentes[id] = residentData[id]; // Guardar el nombre completo
+                    if(scoreText === "...") { 
+                        scoresAreFinal = false; 
+                    }
+                });
+
+                if (!scoresAreFinal) {
+                    if (!confirm("Algunos puntajes no están completos. ¿Desea guardarlos así en Google Sheets? (Los incompletos se guardarán como vacíos)")) {
+                        showFeedback("Guardado cancelado.", "info");
+                        return;
+                    }
+                    Object.keys(puntajes).forEach(id => { if (puntajes[id] === '...') puntajes[id] = ''; });
+                }
+
+                const dataToSend = { 
+                    fecha: fecha, 
+                    tema: tema, 
+                    evaluador: evaluador, 
+                    presentador: presentador, 
+                    puntajes: puntajes,
+                    residentes: residentes // Enviar los nombres de los residentes
+                };
+
+                saveToSheetButton.disabled = true;
+                saveToSheetButton.textContent = 'Guardando en Drive...';
+                showFeedback('Enviando datos a Google Drive...', 'info');
+
+                try {
+                    const response = await fetch(webAppUrl, { 
+                        method: 'POST', 
+                        mode: 'cors', 
+                        redirect: 'follow', 
+                        body: JSON.stringify(dataToSend), 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    const result = await response.json();
+                    if (result.result === "success") {
+                        showFeedback(result.message || 'Guardado con éxito en Google Drive.', 'success');
+                        // Opcional: abrir el PDF en una nueva pestaña
+                        // if(result.pdfUrl) { window.open(result.pdfUrl, '_blank'); }
+                    } else {
+                        console.error("Respuesta de Apps Script:", result);
+                        showFeedback(`Error al guardar en Drive: ${result.message || 'Error desconocido.'}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error en fetch a Google Sheet:', error);
+                    showFeedback(`Error de conexión al guardar: ${error.message}`, 'error');
+                } finally {
+                    saveToSheetButton.disabled = false;
+                    saveToSheetButton.textContent = 'Guardar en Google Sheet';
+                }
+            }
+
+             function showFeedback(message, type = 'success') {
+                feedbackMessage.textContent = message;
+                feedbackMessage.style.color = type === 'error' ? '#d9534f' : (type === 'info' ? '#0275d8' : '#5cb85c');
+                feedbackMessage.style.display = 'block';
+                // Limpiar mensaje después de un tiempo, excepto si es error
+                if(type !== 'error') {
+                     setTimeout(() => { feedbackMessage.style.display = 'none'; feedbackMessage.textContent = ''; }, 4000);
+                }
+            }
+
+             allScoreInputs.forEach(input => {
+                 input.addEventListener('input', () => {
+                     const max = parseInt(input.max, 10); let value = input.value;
+                     if (value !== '') {
+                         let numValue = parseInt(value, 10);
+                         if (isNaN(numValue)) { input.value = ''; } else if (numValue < 0) { input.value = 0; } else if (numValue > max) { input.value = max; showFeedback(`El valor máximo para este criterio es ${max}`, 'info');}
+                     }
+                     const residentId = input.name.split('_').pop(); calculateResidentScore(residentId);
+                     scoreSummaryDiv.style.display = 'none'; printSummaryButton.style.display = 'none';
+                 });
+             });
+
+            // --- Event Listeners Botones ---
+            presentadorSelect.addEventListener('change', updateRubricState);
+            saveButton.addEventListener('click', saveData);
+            clearButton.addEventListener('click', clearForm);
+            generateSummaryButton.addEventListener('click', generateSummaryTable);
+            printSummaryButton.addEventListener('click', printSummary);
+            saveToSheetButton.addEventListener('click', saveToGoogleSheet); // Listener para guardar en Sheet
+
+            // --- Initial Load ---
+            loadData();
+
+        });
+    </script>
+
+</body>
+</html>
